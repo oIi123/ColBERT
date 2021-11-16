@@ -114,16 +114,6 @@ class ColBERTMixed(ColBERTMixIn, ColBERT):
             nn.Linear(32*128, 3),
             nn.Sigmoid(),
         ).to(DEVICE)
-    
-    def state_dict(self):
-        return {
-            'seq': self.seq.state_dict(),
-            'bert': super(ColBERTMixed, self).state_dict(),
-        }
-    
-    def load_state_dict(self, state_dict):
-        self.seq.load_state_dict(state_dict['seq'])
-        super(ColBERTMixed, self).load_state_dict(state_dict['bert'])
 
     def to_bigram(self, v: torch.Tensor) -> torch.Tensor:
         return torch.cat((v[:,:-1], v[:,1:]), dim=-1)
