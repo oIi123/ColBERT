@@ -3,7 +3,7 @@ import torch
 from contextlib import contextmanager
 from colbert.utils.utils import NullContextManager
 
-PyTorch_over_1_6 = float('.'.join(torch.__version__.split('.')[0:2])) >= 1.6
+PyTorch_over_1_6 = int(torch.__version__.split('.')[0]) > 1 or int(torch.__version__.split('.')[1]) > 6
 
 
 class MixedPrecisionManager():
