@@ -125,9 +125,9 @@ class ColBERTMixed(ColBERTMixIn, ColBERT):
 
         unigram_similarity = (Q @ D.permute(0, 2, 1)) * weights[:,:,0].unsqueeze(-1)
         unigram_score = unigram_similarity.max(2).values.sum(1)
-        bigram_similarity = (self.to_bigram(Q) @ self.to_bigram(D).permute(0, 2, 1)) * weights[:,:,1].unsqueeze(-1)
+        bigram_similarity = (self.to_bigram(Q) @ self.to_bigram(D).permute(0, 2, 1)) * weights[:,:-1,1].unsqueeze(-1)
         bigram_score = bigram_similarity.max(2).values.sum(1)
-        trigram_similarity = (self.to_trigram(Q) @ self.to_trigram(D).permute(0, 2, 1)) * weights[:,:,2].unsqueeze(-1)
+        trigram_similarity = (self.to_trigram(Q) @ self.to_trigram(D).permute(0, 2, 1)) * weights[:,:-2,2].unsqueeze(-1)
         trigram_score = trigram_similarity.max(2).values.sum(1)
 
         return unigram_score + bigram_score + trigram_score
