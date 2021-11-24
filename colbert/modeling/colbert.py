@@ -110,8 +110,7 @@ class ColBERTMixed(ColBERTMixIn, ColBERT):
         super(ColBERTMixed, self).__init__(config, query_maxlen, doc_maxlen, mask_punctuation, dim, similarity_metric)
 
         self.seq = nn.Sequential(
-            nn.Flatten(start_dim=1),
-            nn.Linear(32*128, 3),
+            nn.Linear(128, 3),
             nn.Sigmoid(),
         ).to(DEVICE)
 
@@ -122,12 +121,16 @@ class ColBERTMixed(ColBERTMixIn, ColBERT):
         return torch.cat((v[:,:-2], v[:,1:-1], v[:,2:]), dim=-1)
 
     def score(self, Q, D):
-        unigram_score = (Q @ D.permute(0, 2, 1)).max(2).values.sum(1)
-        bigram_score = (self.to_bigram(Q) @ self.to_bigram(D).permute(0, 2, 1)).max(2).values.sum(1)
-        trigram_score = (self.to_trigram(Q) @ self.to_trigram(D).permute(0, 2, 1)).max(2).values.sum(1)
-
         weights = self.seq(Q)
-        return weights[:,0] * unigram_score + weights[:,1] * bigram_score + weights[:,2] * trigram_score
+
+        unigram_similarity = (Q @ D.permute(0, 2, 1)) * weights[:,:,0].unsqueeze(-1)
+        unigram_score = unigram_similarity.max(2).values.sum(1)
+        bigram_similarity = (self.to_bigram(Q) @ self.to_bigram(D).permute(0, 2, 1)) * weights[:,:,1].unsqueeze(-1)
+        bigram_score = bigram_similarity.max(2).values.sum(1)
+        trigram_similarity = (self.to_trigram(Q) @ self.to_trigram(D).permute(0, 2, 1)) * weights[:,:,2].unsqueeze(-1)
+        trigram_score = trigram_similarity.max(2).values.sum(1)
+
+        return unigram_score + bigram_score + trigram_score
 
 
 MODEL_MAP={
