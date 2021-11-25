@@ -28,13 +28,17 @@ class ModelInference():
                 D = self.colbert.doc(*args, **kw_args)
                 return D.cpu() if to_cpu else D
 
-    def queryFromText(self, queries, bsize=None, to_cpu=False):
+    def queryFromText(self, queries, bsize=None, to_cpu=False, with_ids=False):
         if bsize:
             batches = self.query_tokenizer.tensorize(queries, bsize=bsize)
-            batches = [self.query(input_ids, attention_mask, to_cpu=to_cpu) for input_ids, attention_mask in batches]
-            return torch.cat(batches)
+            batchesEmbs = [self.query(input_ids, attention_mask, to_cpu=to_cpu) for input_ids, attention_mask in batches]
+            if with_ids:
+                return torch.cat(batchesEmbs), torch.cat([ids for ids, _ in batches]), torch.cat([masks for _, masks in batches])
+            return torch.cat(batchesEmbs)
 
         input_ids, attention_mask = self.query_tokenizer.tensorize(queries)
+        if with_ids:
+            return (self.query(input_ids, attention_mask), input_ids, attention_mask)
         return self.query(input_ids, attention_mask)
 
     def docFromText(self, docs, bsize=None, keep_dims=True, to_cpu=False):
