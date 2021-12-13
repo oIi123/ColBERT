@@ -116,10 +116,12 @@ class ColBERTMixed(ColBERTMixIn, ColBERT):
         ).to(DEVICE)
 
     def to_bigram(self, v: torch.Tensor) -> torch.Tensor:
-        return torch.cat((v[:,:-1], v[:,1:]), dim=-1)
+        v = torch.cat((v[:,:-1], v[:,1:]), dim=-1)
+        return torch.nn.functional.normalize(v, p=2, dim=2)
 
     def to_trigram(self, v: torch.Tensor) -> torch.Tensor:
-        return torch.cat((v[:,:-2], v[:,1:-1], v[:,2:]), dim=-1)
+        v = torch.cat((v[:,:-2], v[:,1:-1], v[:,2:]), dim=-1)
+        return torch.nn.functional.normalize(v, p=2, dim=2)
 
     def score(self, Q, D):
         unigram_score = (Q @ D.permute(0, 2, 1)).max(2).values.sum(1)
